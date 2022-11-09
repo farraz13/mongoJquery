@@ -208,7 +208,7 @@
               </div>
               <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
               <a href="/">
-                <button type="reset" class="btn btn-warning" onclick="resetData()"><i
+                <button type="reset" class="btn btn-warning" id="resetData"><i
                     class="fa-solid fa-rotate-left"></i></button>
               </a>
             </form>
@@ -260,8 +260,23 @@
 
     $(document).ready(function () {
       readData()
+
+      $('#resetData').on("click", (event) => {
+        event.preventDefault()
+        const page = 1
+        $("#form-search").trigger('reset')
+        params = { page }
+        readData()
     })
 
+      $("#form-search").submit(function (event) {
+        event.preventDefault()
+        search()
+      })
+
+
+    })
+    //Read The Data
     const readData = () => {
       $.ajax({
         method: 'GET',
@@ -279,7 +294,7 @@
               <td>${item.integers}</td>
               <td>${item.floats}</td>
               <td>${moment(item.dates).format('YYYY-MM-DD')}</td>
-              <td>${item.booleans}</td>
+              <td>${JSON.parse(item.booleans)}</td>
               <td>
                 <button type="button" class='btn btn-success' onclick='editData(${JSON.stringify(item)})'><i class="fa-solid fa-pen"></i></button>
                 <button type="button" class='btn btn-danger' onclick="removeData('${item._id}')"><i class="fa-solid fa-trash"></i></button>
@@ -314,7 +329,7 @@
 
       if (idEdit == null) {
         $.ajax({
-          method: 'POST', // or 'PUT'
+          method: 'POST',
           url: 'http://localhost:3001/',
           dataType: 'json',
           data: { string, integer, float, date, boolean }
@@ -342,17 +357,7 @@
       $('#boolean').val('')
       return false
     }
-    // delete
-    const removeData = (id) => {
-      fetch(`http://localhost:3001/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then((response) => response.json()).then((data) => {
-        readData()
-      })
-    }
+
     const editData = (breads) => {
 
       idEdit = breads._id
@@ -362,6 +367,16 @@
       $('#date').val(moment(breads.dates).format('YYYY-MM-DD'))
       $(`#boolean option[value=${breads.booleans}]`).prop('selected', true)
 
+    }
+    //Delete
+    const removeData = (id) => {
+      $.ajax({
+        method: "DELETE",
+        url: `http://localhost:3001/${id}`,
+        dataType: "json",
+      }).done(function (data) {
+        readData()
+      })
     }
     const pagination = () => {
       let pagination = `<ul class="pagination">
@@ -380,7 +395,7 @@
             </a>
         </li>
     </ul>`
-      document.getElementById('pagination').innerHTML = pagination
+      $('#pagination').html(pagination)
     }
 
     function changePage(page) {
@@ -389,30 +404,22 @@
       return false
     }
 
-    function resetData() {
-      document.getElementById('form-search').reset()
-      readData()
-    }
+   
 
-    document.getElementById("form-users").addEventListener("submit", function (event) {
-      event.preventDefault()
-      saveData()
-    });
-
-
-    document.getElementById('form-search').addEventListener('submit', (event) => {
+    const search =() =>{
       event.preventDefault()
       const page = 1
-      const string = document.getElementById('searchString').value
-      const integer = document.getElementById('searchInteger').value
-      const float = document.getElementById('searchFloat').value
-      const startDate = document.getElementById('searchStartDate').value
-      const endDate = document.getElementById('searchEndDate').value
-      const boolean = document.getElementById('searchBoolean').value
+      const string = $('#searchString').val()
+      const integer = $('#searchInteger').val()
+      const float = $('#searchFloat').val()
+      const startDate = $('#searchStartDate').val()
+      const endDate = $('#searchEndDate').val()
+      const boolean = $('#searchBoolean').val()
       params = { ...params, string, integer, float, startDate, endDate, boolean, page }
-      console.log(params)
+      console.log(params, 'testing')
       readData()
-    })
+    }
+    
 
     //sorting
     function sortTableByColumn(table, column, asc = true) {
